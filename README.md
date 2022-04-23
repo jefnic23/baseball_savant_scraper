@@ -2,6 +2,10 @@
 
 Python script that scrapes all data from Baseball Savant into .csv files.
 
+## Requirements
+
+- Python 3.X
+
 ## Installation
 
 Download the repo using **Code > Download ZIP**, or clone the repo using git bash.
@@ -12,7 +16,13 @@ git clone https://github.com/jefnic23/baseball_savant_scraper.git
 
 ## Setup
 
-Open a console inside the *baseball_savant_scraper* directory and activate the virtual environment.
+Open a console inside the *baseball_savant_scraper* directory and create a virtual enviroment. 
+
+```bash
+python.exe -m venv venv
+```
+
+Activate the virtual environment.
 
 ```bash
 venv\scripts\activate
