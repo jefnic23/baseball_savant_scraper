@@ -1,6 +1,6 @@
 # Baseball Savant Scraper
 
-Python script that scrapes all data from Baseball Savant into .csv files.
+Python script that scrapes data from Baseball Savant into .csv files.
 
 ## Requirements
 
@@ -36,13 +36,12 @@ pip install -r requirements.txt
 
 ## Usage
 
-Once everything is setup and dependencies are installed, run the script from the console. Files are saved to the *data* directory.
+Once everything is setup and dependencies are installed, run the script from the console and follow the prompts.
 
 ```bash
 python savant_scraper.py
 ```
 
-The script will take roughly 120-150 minutes to run. A progress bar will keep track of how far along in the process things are.
+Files are saved to the *data* directory.
 
-If you only need a small subset of data you can edit the start and/or end dates
-in the *savant_scraper.py* file on lines 17, 19, and 20, or the years on line 13.
+The script can take anywhere from a few to several minutes to run, depending on how large the date range is. A progress bar will keep track of how far along in the process things are.
