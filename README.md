@@ -45,3 +45,9 @@ python savant_scraper.py
 Files are saved to the `data` directory.
 
 The script can take anywhere from a few to several minutes to run, depending on how large the date range is. A progress bar will keep track of how far along in the process things are.
+
+#### Related
+
+- [wCSW](https://github.com/jefnic23/wCSW)
+- [hEV](https://github.com/jefnic23/hEV)
+- [SBot](https://github.com/jefnic23/SBot)
