@@ -16,7 +16,7 @@ git clone https://github.com/jefnic23/baseball_savant_scraper.git
 
 ## Setup
 
-Open a console inside the *baseball_savant_scraper* directory and create a virtual enviroment. 
+Open a console inside the `baseball_savant_scraper` directory and create a virtual enviroment. 
 
 ```bash
 python.exe -m venv venv
@@ -42,6 +42,6 @@ Once everything is setup and dependencies are installed, run the script from the
 python savant_scraper.py
 ```
 
-Files are saved to the *data* directory.
+Files are saved to the `data` directory.
 
 The script can take anywhere from a few to several minutes to run, depending on how large the date range is. A progress bar will keep track of how far along in the process things are.
