@@ -48,6 +48,6 @@ The script can take anywhere from a few to several minutes to run, depending on 
 
 #### Related
 
-- [wCSW](https://github.com/jefnic23/wCSW)
+- [wES](https://github.com/jefnic23/wES)
 - [hEV](https://github.com/jefnic23/hEV)
 - [SBot](https://github.com/jefnic23/SBot)
