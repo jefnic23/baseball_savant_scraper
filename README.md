@@ -1,10 +1,11 @@
-# Baseball Savant Scraper
+# BaseballSavant Scraper
 
-Python script that scrapes data from Baseball Savant into .csv files.
+Python script that scrapes data from [BaseballSavant](https://baseballsavant.mlb.com/) into a SQL database.
 
 ## Requirements
 
 - Python 3.X
+- PostgreSQL
 
 ## Installation
 
@@ -36,15 +37,29 @@ pip install -r requirements.txt
 
 ## Usage
 
-Once everything is setup and dependencies are installed, run the script from the console and follow the prompts.
+Once everything is setup and dependencies are installed, create a ```.env``` file in the root directory.
+
+```bash
+type NUL > .env
+```
+
+Open the file in a text editor and copy these five variables, then assign them the appropriate value (make sure to enter the values between the quotation marks).
+
+```
+USER=''
+PSWD=''
+HOST=''
+PORT=''
+NAME=''
+```
+
+Finally, run the script from the console.
 
 ```bash
 python savant_scraper.py
 ```
 
-Files are saved to the `data` directory.
-
-The script can take anywhere from a few to several minutes to run, depending on how large the date range is. A progress bar will keep track of how far along in the process things are.
+If you're running the script for the first time, it will take over an hour to gather all the data; subsequent updates will check for the most recent date in the database and gather data since then. The script uses tqdm to generate progress bars for each season and week loop, so you'll know how long to expect the process to take.
 
 #### Related
 
