@@ -42,7 +42,7 @@ def main():
 
     # build table from scratch if it doesn't exist
     # if table exists, scrape data starting from most recent date in the database
-    if num_days < 0:
+    if num_days > 0:
         for y in tqdm(range(start_year, date.today().year+1), position=0, desc="Overall"):
             start_date = date(y, 7, 23) if y == 2020 else update_start_date if update else date(y, 3, 20)
             periods = 16 if start_date.year == 2020 else math.ceil(num_days/7) if update else 32
