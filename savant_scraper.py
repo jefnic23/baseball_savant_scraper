@@ -30,7 +30,7 @@ def main():
     # if table exists, set start date to most recent date in table
     if not sqlalchemy.inspect(engine).has_table("baseball_savant"):
         start_year = 2015
-        num_days = -1
+        num_days = 1
         update = False
     else:
         with engine.connect() as conn:
