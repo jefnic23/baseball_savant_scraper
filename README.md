@@ -59,7 +59,7 @@ Finally, run the script from the console.
 python savant_scraper.py
 ```
 
-If you're running the script for the first time, it will take over an hour to gather all the data; subsequent updates will check for the most recent date in the database and gather data since then. The script uses tqdm to generate progress bars for each season and week loop, so you'll know how long to expect the process to take.
+If you're running the script for the first time, it may take up to a half hour to gather all the data; subsequent updates will check for the most recent date in the database and gather data since then. The script uses tqdm to generate progress bars for each season and week loop, so you'll know how long to expect the process to take.
 
 #### Related
 
