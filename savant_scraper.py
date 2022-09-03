@@ -26,21 +26,6 @@ def db_engine():
     return create_engine(f'postgresql://{USER}:{PSWD}@{HOST}:{PORT}/{NAME}')
 
 
-def spray_angle(coord_x, coord_y, hand):
-    '''
-    derives spray angle given x and y hit coordinates.
-    if batter is left-handed, invert the spray angle.
-    '''
-    try:
-        spray_angle = np.arctan((coord_x - 125.42)/(198.27 - coord_y)) * 180 / np.pi * 0.75
-        if hand == "L":
-            return 0 - spray_angle
-        else:
-            return spray_angle
-    except ZeroDivisionError:
-        return np.nan
-
-
 def get_statcast_data(_year, _date, _delta):
     url = f"https://baseballsavant.mlb.com/statcast_search/csv?all=true&hfPT=&hfAB=&hfBBT=&hfPR=&hfZ=&stadium=&hfBBL=&hfNewZones=&hfGT=R%7C&hfC=&hfSea={str(_year)}%7C&hfSit=&player_type=pitcher&hfOuts=&opponent=&pitcher_throws=&batter_stands=&hfSA=&game_date_gt={_date.strftime('%Y-%m-%d')}&game_date_lt={(_date.date() + _delta).strftime('%Y-%m-%d')}&team=&position=&hfRO=&home_road=&hfFlag=&metric_1=&hfInn=&min_pitches=0&min_results=0&group_by=name&sort_col=pitches&player_event_sort=h_launch_speed&sort_order=desc&min_abs=0&type=details&"
     res = requests.get(url, timeout=None).content
