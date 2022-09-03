@@ -92,5 +92,6 @@ dtypes = {
     'of_fielding_alignment':           Text(),
     'spin_axis':                       Float(),
     'delta_home_win_exp':              Float(),
-    'delta_run_exp':                   Float()
+    'delta_run_exp':                   Float(),
+    'spray_angle':                     Float()
 }

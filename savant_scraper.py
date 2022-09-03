@@ -2,7 +2,6 @@ import concurrent.futures
 import io
 import math
 import os
-import random
 import time
 from datetime import date, datetime, timedelta
 
@@ -10,10 +9,11 @@ import numpy as np
 import pandas as pd
 import requests
 import sqlalchemy
-from col_dtypes import dtypes
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from tqdm import tqdm
+
+from col_dtypes import dtypes
 
 
 def db_engine():
@@ -24,6 +24,21 @@ def db_engine():
     PORT = os.getenv('PORT')
     NAME = os.getenv('NAME')
     return create_engine(f'postgresql://{USER}:{PSWD}@{HOST}:{PORT}/{NAME}')
+
+
+def spray_angle(coord_x, coord_y, hand):
+    '''
+    derives spray angle given x and y hit coordinates.
+    if batter is left-handed, invert the spray angle.
+    '''
+    try:
+        spray_angle = np.arctan((coord_x - 125.42)/(198.27 - coord_y)) * 180 / np.pi * 0.75
+        if hand == "L":
+            return 0 - spray_angle
+        else:
+            return spray_angle
+    except ZeroDivisionError:
+        return np.nan
 
 
 def get_statcast_data(_year, _date, _delta):
@@ -64,6 +79,8 @@ def main():
                     futures = {executor.submit(get_statcast_data, _year, _date, _delta) for _date in pd.date_range(start=start_date, periods=periods, freq="7D")}
                     for future in concurrent.futures.as_completed(futures):
                         df = future.result()
+                        df['spray_angle'] = np.arctan((df['hc_x'] - 125.42) / (198.27 - df['hc_y'])) * 180 / np.pi * 0.75
+                        df['spray_angle'] = np.where(df['stand'] == 'L', 0 - df['spray_angle'], df['spray_angle'])
                         df.to_sql(
                             "baseball_savant", 
                             engine, 
