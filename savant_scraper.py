@@ -29,7 +29,7 @@ def db_engine():
 def get_statcast_data(_year, _date, _delta):
     url = f"https://baseballsavant.mlb.com/statcast_search/csv?all=true&hfPT=&hfAB=&hfBBT=&hfPR=&hfZ=&stadium=&hfBBL=&hfNewZones=&hfGT=R%7C&hfC=&hfSea={str(_year)}%7C&hfSit=&player_type=pitcher&hfOuts=&opponent=&pitcher_throws=&batter_stands=&hfSA=&game_date_gt={_date.strftime('%Y-%m-%d')}&game_date_lt={(_date.date() + _delta).strftime('%Y-%m-%d')}&team=&position=&hfRO=&home_road=&hfFlag=&metric_1=&hfInn=&min_pitches=0&min_results=0&group_by=name&sort_col=pitches&player_event_sort=h_launch_speed&sort_order=desc&min_abs=0&type=details&"
     res = requests.get(url, timeout=None).content
-    return pd.read_csv(io.StringIO(res.decode('utf-8')))
+    return pd.read_csv(io.StringIO(res.decode('utf-8')), on_bad_lines='skip')
 
 
 def main():
@@ -45,7 +45,7 @@ def main():
     else:
         with engine.connect() as conn:
             res               = conn.execute('SELECT game_date FROM baseball_savant ORDER BY game_date DESC').first()[0]
-            update_start_date = datetime.strptime(res, '%Y-%m-%d').date()
+            update_start_date = datetime.strptime(res, '%Y-%m-%d').date() if type(res) == 'str' else res
             start_year        = update_start_date.year
             num_days          = (date.today() - update_start_date).days
             update            = True
