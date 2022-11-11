@@ -65,6 +65,7 @@ def main():
                         df = future.result()
                         if df is not None and not df.empty:
                             print(df.head())
+                            df['player_name'] = df['player_name'].str.normalize('NFKD').str.encode('ascii', errors='ignore').str.decode('utf-8')
                             df['spray_angle'] = np.arctan((df['hc_x'] - 125.42) / (198.27 - df['hc_y'])) * 180 / np.pi * 0.75
                             df['spray_angle'] = np.where(df['stand'] == 'L', 0 - df['spray_angle'], df['spray_angle'])
                             df.to_sql(
