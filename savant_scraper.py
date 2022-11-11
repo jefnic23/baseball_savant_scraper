@@ -27,7 +27,7 @@ def db_engine():
 
 
 def get_statcast_data(_year, _date, _delta):
-    url = f"https://baseballsavant.mlb.com/statcast_search/csv?all=true&hfPT=&hfAB=&hfBBT=&hfPR=&hfZ=&stadium=&hfBBL=&hfNewZones=&hfGT=R%7C&hfC=&hfSea={str(_year)}%7C&hfSit=&player_type=pitcher&hfOuts=&opponent=&pitcher_throws=&batter_stands=&hfSA=&game_date_gt={_date.strftime('%Y-%m-%d')}&game_date_lt={(_date.date() + _delta).strftime('%Y-%m-%d')}&team=&position=&hfRO=&home_road=&hfFlag=&metric_1=&hfInn=&min_pitches=0&min_results=0&group_by=name&sort_col=pitches&player_event_sort=h_launch_speed&sort_order=desc&min_abs=0&type=details&"
+    url = f"https://baseballsavant.mlb.com/statcast_search/csv?hfPT=&hfAB=&hfGT=R%7C&hfPR=&hfZ=&hfStadium=&hfBBL=&hfNewZones=&hfPull=&hfC=&hfSea={str(_year)}%7C&hfSit=&player_type=pitcher&hfOuts=&hfOpponent=&pitcher_throws=&batter_stands=&hfSA=&game_date_gt={_date.strftime('%Y-%m-%d')}&game_date_lt={(_date.date() + _delta).strftime('%Y-%m-%d')}&hfMo=&hfTeam=&home_road=&hfRO=&position=&hfInfield=&hfOutfield=&hfInn=&hfBBT=&hfFlag=&metric_1=&group_by=name&min_pitches=0&min_results=0&min_pas=0&sort_col=pitches&player_event_sort=api_p_release_speed&sort_order=desc&type=details&all=true"
     res = requests.get(url, timeout=None).content
     return pd.read_csv(io.StringIO(res.decode('utf-8')), on_bad_lines='skip')
 
@@ -55,26 +55,27 @@ def main():
     if num_days > 0:
         for _year in tqdm(range(start_year, date.today().year+1), position=0, desc="Overall"):
             start_date = date(_year, 7, 23) if _year == 2020 else update_start_date if update else date(_year, 3, 20)
-            periods    = 16 if start_date.year == 2020 else math.ceil(num_days/7) if update else 32
-            _delta     = timedelta(days=6)
+            periods    = 16 if start_date.year == 2020 else math.ceil(num_days/4) if update else 32
+            _delta     = timedelta(days=3)
 
-            # savant limits queries to 40,000 rows, so get 6 days of data at a time
             with tqdm(total=periods, position=1, desc="Season", leave=False) as progress:
                 with concurrent.futures.ThreadPoolExecutor() as executor:
-                    futures = {executor.submit(get_statcast_data, _year, _date, _delta) for _date in pd.date_range(start=start_date, periods=periods, freq="7D")}
+                    futures = {executor.submit(get_statcast_data, _year, _date, _delta) for _date in pd.date_range(start=start_date, periods=periods, freq="4D")}
                     for future in concurrent.futures.as_completed(futures):
                         df = future.result()
-                        df['spray_angle'] = np.arctan((df['hc_x'] - 125.42) / (198.27 - df['hc_y'])) * 180 / np.pi * 0.75
-                        df['spray_angle'] = np.where(df['stand'] == 'L', 0 - df['spray_angle'], df['spray_angle'])
-                        df.to_sql(
-                            "baseball_savant", 
-                            engine, 
-                            if_exists="append",
-                            index=False,
-                            dtype=dtypes
-                        )
-                        progress.update(1)
-                    time.sleep(30)
+                        if df is not None and not df.empty:
+                            print(df.head())
+                            df['spray_angle'] = np.arctan((df['hc_x'] - 125.42) / (198.27 - df['hc_y'])) * 180 / np.pi * 0.75
+                            df['spray_angle'] = np.where(df['stand'] == 'L', 0 - df['spray_angle'], df['spray_angle'])
+                            df.to_sql(
+                                "baseball_savant", 
+                                engine, 
+                                if_exists="append",
+                                index=False,
+                                dtype=dtypes
+                            )
+                            progress.update(1)
+                        time.sleep(60)
     else:
         print("Database is up to date.")
 
