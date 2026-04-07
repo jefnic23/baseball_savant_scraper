@@ -23,6 +23,30 @@ RATE_LIMITER = RateLimiter(3.0)
 SESSION = requests.Session()
 SESSION.headers.update({"Accept-Encoding": "gzip, deflate", "User-Agent": "savant_scraper"})
 
+SWING_EVENTS = [
+    "foul",
+    "foul_pitchout",
+    "foul_tip",
+    "hit_into_play",
+    "swinging_pitchout",
+    "swinging_strike",
+    "swinging_strike_blocked",
+]
+
+TAKE_EVENTS = [
+    "automatic_ball",
+    "automatic_strike",
+    "ball",
+    "blocked_ball",
+    "called_strike",
+]
+
+CONTACT_EVENTS = [
+    "foul",
+    "foul_pitchout",
+    "hit_into_play",
+]
+
 
 def db_engine() -> Engine:
     load_dotenv()
@@ -37,7 +61,7 @@ def get_statcast_data(
     dtypes: dict[str, str] = READ_DTYPES,
     parse_dates: list[str] = DATE_COLS,
     session: requests.Session = SESSION,
-    rate_limiter: RateLimiter = RATE_LIMITER
+    rate_limiter: RateLimiter = RATE_LIMITER,
 ) -> pd.DataFrame:
     rate_limiter.wait()
 
@@ -52,14 +76,14 @@ def get_statcast_data(
         "&min_pas=0&sort_col=pitches&player_event_sort=api_p_release_speed"
         "&sort_order=desc&type=details&all=true"
     )
-    
+
     response = session.get(url, timeout=None)
 
     if response.status_code != 200:
         response.raise_for_status()
 
     content = response.content
-    
+
     return pd.read_csv(
         io.StringIO(content.decode("utf-8")),
         on_bad_lines="skip",
@@ -106,10 +130,7 @@ def main():
 
             with tqdm(total=len(chunk_starts), position=1, desc="Season", leave=False) as progress:
                 with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
-                    futures = {
-                        executor.submit(get_statcast_data, year, game_date, delta)
-                        for game_date in chunk_starts
-                    }
+                    futures = {executor.submit(get_statcast_data, year, game_date, delta) for game_date in chunk_starts}
                     for future in concurrent.futures.as_completed(futures):
                         df = future.result()
                         if df is not None and not df.empty:
@@ -119,10 +140,28 @@ def main():
                                 .str.encode("ascii", errors="ignore")
                                 .str.decode("utf-8")
                             )
-                            df["spray_angle"] = (
-                                np.arctan((df["hc_x"] - 125.42) / (198.27 - df["hc_y"])) * 180 / np.pi * 0.75
+                            is_left = df["stand"].eq("L").fillna(False)
+                            in_play = df["bb_type"].notna()
+                            swing_desc = df["description"].isin(SWING_EVENTS).fillna(False)
+                            take_desc = df["description"].isin(TAKE_EVENTS).fillna(False)
+                            zone = pd.to_numeric(df["zone"], errors="coerce")
+
+                            df["horizontal_launch_speed"] = np.where(
+                                in_play,
+                                df["launch_speed"] * np.cos(np.radians(df["launch_angle"] - 25)),
+                                0,
                             )
-                            df["spray_angle"] = np.where(df["stand"] == "L", 0 - df["spray_angle"], df["spray_angle"])
+
+                            angle = np.arctan((df["hc_x"] - 125.42) / (198.27 - df["hc_y"])) * 180 / np.pi * 0.75
+                            df["spray_angle"] = np.where(is_left, -angle, angle)
+
+                            df["o_swing"] = np.where((zone > 10).fillna(False) & swing_desc, 1, 0)
+                            df["z_swing"] = np.where((zone < 10).fillna(False) & swing_desc, 1, 0)
+                            df["o_take"] = np.where((zone > 10).fillna(False) & take_desc, 1, 0)
+                            df["z_take"] = np.where((zone < 10).fillna(False) & take_desc, 1, 0)
+                            df["swing"] = np.where(df["description"].isin(SWING_EVENTS), 1, 0)
+                            df["contact"] = np.where(df["description"].isin(CONTACT_EVENTS), 1, 0)
+
                             df.to_sql(
                                 TABLE_NAME,
                                 engine,
