@@ -141,16 +141,20 @@ def main():
                                 .str.decode("utf-8")
                             )
                             is_left = df["stand"].eq("L").fillna(False)
-                            in_play = df["bb_type"].notna()
                             swing_desc = df["description"].isin(SWING_EVENTS).fillna(False)
                             take_desc = df["description"].isin(TAKE_EVENTS).fillna(False)
                             zone = pd.to_numeric(df["zone"], errors="coerce")
 
-                            df["horizontal_launch_speed"] = np.where(
-                                in_play,
-                                df["launch_speed"] * np.cos(np.radians(df["launch_angle"] - 25)),
-                                0,
+                            launch_angle = df["launch_angle"].notna()
+                            launch_speed = df["launch_speed"].notna()
+                            high_speed_weight = 1 / (1 + np.exp(-(launch_speed - 95) / 4))
+                            low_speed_weight = 1 - high_speed_weight
+                            low_angle_peak = np.exp(-0.5 * ((launch_angle - 14) / 7) ** 2)
+                            high_angle_peak = np.exp(-0.5 * ((launch_angle - 28) / 8) ** 2)
+                            direction_quality = (low_speed_weight * low_angle_peak) + (
+                                high_speed_weight * high_angle_peak
                             )
+                            df["horizontal_launch_speed"] = launch_speed * direction_quality
 
                             angle = np.arctan((df["hc_x"] - 125.42) / (198.27 - df["hc_y"])) * 180 / np.pi * 0.75
                             df["spray_angle"] = np.where(is_left, -angle, angle)
